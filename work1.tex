@@ -1,0 +1,186 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath, amssymb, amsfonts, bm}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{mathtools}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\title{\textbf{机器学习入门理论综述}\\ \large{从基本原理到深度生成模型}}
+\author{人工智能基础研究组}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+本文档旨在从理论和数学层面系统性地梳理机器学习的入门核心知识点。综述分为两大部分：第一部分聚焦于机器学习、深度学习及强化学习的基本原理，包括训练范式、前向传播、收敛性定义及核心评估指标；第二部分则深入解析各类基本模型，从经典的监督学习、无监督学习，到前沿的深度神经网络架构及生成模型，涵盖其数学假设、优化目标与算法机理。
+\end{abstract}
+
+\section{第一部分：机器学习基本原理}
+\label{sec:fundamentals}
+
+\subsection{机器学习范式与定义}
+从计算学习理论的视角出发，机器学习可形式化为寻找一个映射函数 $f: \mathcal{X} \rightarrow \mathcal{Y}$，使其在给定数据集 $\mathcal{D} = \{(\mathbf{x}_i, y_i)\}_{i=1}^N$ 上最小化期望风险（Expected Risk）$R(f) = \mathbb{E}_{(\mathbf{x},y)\sim P_{data}} [\mathcal{L}(f(\mathbf{x}), y)]$。由于真实数据分布 $P_{data}$ 未知，实际采用经验风险最小化（ERM）准则，最小化经验损失 $\hat{R}(f) = \frac{1}{N}\sum_{i=1}^N \mathcal{L}(f(\mathbf{x}_i), y_i)$。
+
+根据训练数据与反馈信号的差异，可分为：
+\begin{itemize}
+    \item \textbf{监督学习（Supervised Learning）}：利用带标签 $y$ 的数据学习条件概率 $P(y|\mathbf{x})$ 或决策边界。
+    \item \textbf{无监督学习（Unsupervised Learning）}：在无标签数据中寻找潜在结构 $P(\mathbf{x})$。
+    \item \textbf{强化学习（Reinforcement Learning, RL）}：智能体（Agent）通过与环境的交互，依据奖励信号 $R$ 优化策略 $\pi(a|s)$，其数学基础为马尔可夫决策过程（MDP），贝尔曼方程（Bellman Equation）定义了最优值函数 $V^*(s) = \max_a \mathbb{E}[R(s,a) + \gamma V^*(s')]$。
+\end{itemize}
+
+\subsection{训练过程、前向传播与收敛性}
+深度学习的训练过程基于梯度下降（Gradient Descent）：
+\begin{equation}
+    \theta_{t+1} = \theta_t - \eta \nabla_{\theta} \mathcal{L}(\theta_t),
+\end{equation}
+其中 $\theta$ 为模型参数，$\eta$ 为学习率。
+
+\textbf{前向传播（Forward Propagation）}指数据 $\mathbf{x}$ 逐层通过非线性变换 $h^{(l)} = \phi^{(l)}(\mathbf{W}^{(l)} h^{(l-1)} + \mathbf{b}^{(l)})$ 最终生成预测 $\hat{y}$ 的过程。模型参数的优化依据是损失函数（Loss Function）计算出的标量误差。
+
+\textbf{收敛性（Convergence）}指随着训练轮次（Epoch）增加，损失函数值 $\mathcal{L}(\theta)$ 趋近于局部或全局极小值，即 $\lim_{t \to \infty} \|\nabla \mathcal{L}(\theta_t)\| = 0$（凸函数中为全局最优）。在非凸损失曲面中，通常以验证集性能不再提升作为早停（Early Stopping）的收敛判据。
+
+\subsection{基础评估指标}
+\begin{itemize}
+    \item \textbf{回归任务}：均方误差（MSE）$\frac{1}{N}\sum(y_i - \hat{y}_i)^2$；平均绝对误差（MAE）。
+    \item \textbf{分类任务}：准确率（Accuracy）；精确率（Precision）$P = \frac{TP}{TP+FP}$；召回率（Recall）$R = \frac{TP}{TP+FN}$；$F1$ 分数（调和平均数）；ROC曲线下面积（AUC）。
+\end{itemize}
+
+\section{第二部分：核心模型数学解析}
+\label{sec:models}
+
+\subsection{监督学习基础模型}
+
+\subsubsection{线性回归（Linear Regression）}
+假设目标变量 $y$ 与特征 $\mathbf{x} \in \mathbb{R}^d$ 呈线性关系：$\hat{y} = \mathbf{w}^T \mathbf{x} + b$。最小化残差平方和，损失函数为：
+\begin{equation}
+    J(\mathbf{w}) = \frac{1}{2N}\sum_{i=1}^N (\mathbf{w}^T \mathbf{x}_i - y_i)^2.
+\end{equation}
+其解析解（闭式解）为 $\mathbf{w}^* = (\mathbf{X}^T \mathbf{X})^{-1}\mathbf{X}^T \mathbf{y}$。当特征维度高时，通常采用梯度下降求解。
+
+\subsubsection{逻辑回归（Logistic Regression）}
+用于二分类，通过 Sigmoid 函数 $\sigma(z) = 1/(1+e^{-z})$ 将线性输出映射为概率 $P(y=1|\mathbf{x}) = \sigma(\mathbf{w}^T \mathbf{x} + b)$。使用交叉熵损失（负对数似然）：
+\begin{equation}
+    J(\mathbf{w}) = -\frac{1}{N}\sum_{i=1}^N \left[ y_i \log(\hat{y}_i) + (1-y_i)\log(1-\hat{y}_i) \right].
+\end{equation}
+
+\subsubsection{决策树（Decision Trees）}
+采用递归分区策略，通过不纯度（Impurity）衡量选择最优切分特征。常用基尼系数（Gini Index）$G(S) = 1 - \sum_{k} p_k^2$ 或信息增益（Information Gain）基于熵 $H(S) = -\sum_k p_k \log p_k$。切分准则为最大化：
+\begin{equation}
+    IG(S, A) = H(S) - \sum_{v \in Values(A)} \frac{|S_v|}{|S|} H(S_v).
+\end{equation}
+
+\subsubsection{天真贝叶斯（Na\"ive Bayes）}
+基于贝叶斯定理 $P(y|\mathbf{x}) \propto P(y) \prod_{i=1}^d P(x_i | y)$，其核心假设是特征条件独立性（Conditional Independence）。对于连续特征，通常假设 $P(x_i|y) \sim \mathcal{N}(\mu_{y,i}, \sigma_{y,i}^2)$。
+
+\subsection{高级监督学习模型}
+
+\subsubsection{支持向量机（SVM）}
+旨在寻找最大间隔超平面。原始优化问题为：
+\begin{align}
+    \min_{\mathbf{w}, b} \quad & \frac{1}{2} \|\mathbf{w}\|^2 \\
+    \text{s.t.} \quad & y_i(\mathbf{w}^T \mathbf{x}_i + b) \geq 1, \quad \forall i.
+\end{align}
+通过拉格朗日对偶性，引入核函数 $K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i)^T \phi(\mathbf{x}_j)$ 处理非线性可分数据。
+
+\subsubsection{随机森林（Random Forest）}
+作为 Bagging 集成与决策树的结合，通过在样本和特征两个维度引入随机性，构建 $T$ 棵决策树。最终预测为多数投票（分类）或平均值（回归），有效降低方差（Variance）。
+
+\subsubsection{梯度增强（Gradient Boosting）}
+前向分步加法模型，以 XGBoost 为代表。每一轮 $m$ 训练一个新的弱学习器 $h_m(\mathbf{x})$ 拟合当前残差的负梯度方向：
+\begin{equation}
+    F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \nu h_m(\mathbf{x}), \quad \text{where } h_m \approx -\frac{\partial \mathcal{L}}{\partial F_{m-1}}.
+\end{equation}
+$\nu$ 为学习率（Shrinkage）。
+
+\subsection{无监督学习模型}
+
+\subsubsection{K-均值（K-Means）}
+通过迭代优化将数据划分为 $K$ 个簇。目标函数为最小化簇内平方和（Inertia）：
+\begin{equation}
+    \min_{\{\mu_k\}} \sum_{k=1}^K \sum_{\mathbf{x} \in C_k} \|\mathbf{x} - \mu_k\|^2.
+\end{equation}
+通过 Lloyd 算法（EM 思想的硬分配版本）求解。
+
+\subsubsection{层级聚类（Hierarchical Clustering）}
+构建聚类的树状图（Dendrogram），分为凝聚（自底向上）和分裂（自顶向下）两种。衡量簇间距离的方法包括单链（最小距离）、全链（最大距离）和 Ward 方差最小化准则。
+
+\subsubsection{主成分分析（PCA）}
+一种线性降维技术，寻找数据方差最大的投影方向。通过对协方差矩阵 $C = \frac{1}{N} \mathbf{X}^T \mathbf{X}$ 进行特征值分解，取前 $k$ 个最大特征值对应的特征向量构成投影矩阵 $\mathbf{W}_{pca}$。
+
+\subsubsection{t-SNE}
+非线性流形学习方法，用于高维数据可视化。将高维空间的欧氏距离转化为高斯联合概率 $p_{ij}$，低维空间使用 t 分布 $q_{ij}$，并最小化两者间的 KL 散度：
+\begin{equation}
+    KL(P||Q) = \sum_{i \neq j} p_{ij} \log \frac{p_{ij}}{q_{ij}}.
+\end{equation}
+
+\subsection{深度学习与基础神经网络}
+
+\subsubsection{多层感知机（MLP）与反向传播}
+MLP 由输入层、隐藏层和输出层构成。训练依赖反向传播（Backpropagation），本质是链式法则的递归调用：
+\begin{equation}
+    \frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(l)}} = \delta^{(l+1)} (\mathbf{h}^{(l)})^T, \quad \text{where } \delta^{(l)} = (\mathbf{W}^{(l)})^T \delta^{(l+1)} \odot \phi'(\mathbf{z}^{(l)}).
+\end{equation}
+
+\subsubsection{卷积神经网络（CNN）}
+利用卷积核（滤波器）提取局部空间特征，核心算子为互相关运算 $(I * K)(i,j) = \sum_m \sum_n I(i+m, j+n)K(m,n)$。具有权值共享和平移等变性的归纳偏置。
+
+\subsubsection{循环神经网络（RNN）}
+专用于序列数据，通过隐藏状态 $h_t = \phi(W_h h_{t-1} + W_x x_t + b)$ 传递历史信息。训练采用时间反向传播（BPTT），但面临梯度消失/爆炸问题，由此引入 LSTM 与 GRU 门控机制。
+
+\subsection{Transformer 与自注意力机制}
+
+\subsubsection{自注意力机制（Self-Attention）}
+核心公式为缩放点积注意力（Scaled Dot-Product Attention）：
+\begin{equation}
+    \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right) V,
+\end{equation}
+其中 $Q$（查询）、$K$（键）、$V$（值）均为输入 $\mathbf{X}$ 的线性变换，缩放因子 $\sqrt{d_k}$ 防止梯度饱和。
+
+\subsubsection{多头注意力（Multi-Head Attention）}
+将 $Q, K, V$ 投影到 $h$ 个子空间并行执行注意力，最后拼接并线性变换：
+\begin{equation}
+    \text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h) W^O.
+\end{equation}
+
+\subsubsection{BERT 与 GPT 模型}
+基于 Transformer 堆叠：
+\begin{itemize}
+    \item \textbf{BERT}：仅使用编码器（Encoder），采用掩码语言模型（MLM）和下一句预测（NSP）进行双向预训练。
+    \item \textbf{GPT}：仅使用解码器（Decoder），采用自回归（Autoregressive）因果掩码，适用于文本生成。
+\end{itemize}
+
+\subsubsection{视觉变换器（ViT）}
+将图像切分为固定大小的 Patch，线性投影为 Token 序列并加入位置编码，送入标准 Transformer 编码器，证明纯注意力机制在视觉任务中同样有效。
+
+\subsection{生成模型}
+
+\subsubsection{生成对抗网络（GAN）}
+包含生成器 $G$ 和判别器 $D$ 的对抗博弈，目标函数为极小极大化（Minimax）：
+\begin{equation}
+    \min_G \max_D V(D, G) = \mathbb{E}_{\mathbf{x} \sim p_{data}}[\log D(\mathbf{x})] + \mathbb{E}_{\mathbf{z} \sim p_z}[\log(1 - D(G(\mathbf{z})))].
+\end{equation}
+
+\subsubsection{变分自编码器（VAE）}
+基于变分推断，最大化证据下界（ELBO）：
+\begin{equation}
+    \mathcal{L}(\theta, \phi; \mathbf{x}) = \mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})}[\log p_\theta(\mathbf{x}|\mathbf{z})] - D_{KL}(q_\phi(\mathbf{z}|\mathbf{x}) || p(\mathbf{z})).
+\end{equation}
+其中 $q_\phi(\mathbf{z}|\mathbf{x})$ 为编码器，$p_\theta(\mathbf{x}|\mathbf{z})$ 为解码器，重参数化技巧用于解决采样不可导问题。
+
+\subsubsection{扩散模型（Diffusion Models）}
+包含前向扩散（加噪）和逆向去噪过程。前向过程将数据 $\mathbf{x}_0$ 逐步加噪为高斯噪声 $\mathbf{x}_T$：
+\begin{equation}
+    q(\mathbf{x}_t | \mathbf{x}_{t-1}) = \mathcal{N}(\mathbf{x}_t; \sqrt{1-\beta_t} \mathbf{x}_{t-1}, \beta_t \mathbf{I}).
+\end{equation}
+逆向过程训练神经网络 $\epsilon_\theta$ 预测噪声，优化目标简化为：
+\begin{equation}
+    \mathbb{E}_{t, \mathbf{x}_0, \epsilon} \left[ \|\epsilon - \epsilon_\theta(\mathbf{x}_t, t)\|^2 \right].
+\end{equation}
+该范式在图像生成质量上已超越 GAN。
+
+\end{document}
